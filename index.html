@@ -226,6 +226,12 @@
       box-shadow: none;
     }
 
+    .digit-card.locked .lock-button,
+    .digit-card.locked .video-lock-link {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
     .lock-button {
       margin-top: 4px;
       border-radius: 999px;
@@ -245,6 +251,16 @@
     .lock-button:active {
       transform: translateY(1px);
       box-shadow: none;
+    }
+
+    .video-lock-link {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      text-align: center;
+      display: inline-block;
+      text-decoration: underline;
+      color: #2563eb;
+      cursor: pointer;
     }
 
     .form-row {
@@ -362,7 +378,7 @@
         <div class="title">“Fun” Phone Number Input</div>
         <p class="subtitle">
           Step 1: Use neon math abilities on each digit.<br>
-          Step 2: Lock in each digit with its own weird interaction.<br>
+          Step 2: Lock each digit with its own weird ritual (buttons, videos, double-clicks, long-presses).<br>
           Step 3: Type your real number below and hope it matches.
         </p>
       </div>
@@ -393,7 +409,7 @@
         />
         <div class="helper">
           We’ll only accept it if your math-transformed digits match this exactly.<br>
-          Also, every digit must be locked using its own bizarre ritual.
+          Also, every digit must be locked using its own bizarre mechanism first.
         </div>
       </div>
 
@@ -420,6 +436,22 @@
       const realPhoneInput = document.getElementById('realPhone');
       const statusMessage = document.getElementById('statusMessage');
       const appEl = document.querySelector('.app');
+
+      // Edit these to change what videos you troll people with
+      const videoLinks = [
+        {
+          label: 'Watch this extremely important security training',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+        },
+        {
+          label: 'Watch a classic phone commercial',
+          url: 'https://www.youtube.com/results?search_query=90s+phone+commercial'
+        },
+        {
+          label: 'Learn about responsible phone number usage',
+          url: 'https://www.youtube.com/results?search_query=funny+phone+ad'
+        }
+      ];
 
       function randomDigit() {
         return Math.floor(Math.random() * 10);
@@ -522,37 +554,29 @@
           card.appendChild(ops);
           card.appendChild(lockBtn);
         } else if (mode === 1) {
-          // Mode 1: Swipe left/right on card
-          hint.textContent = 'Swipe this card left or right to lock.';
-          let startX = null;
+          // Mode 1: Click a video link to lock
+          const videoConfig = videoLinks[index % videoLinks.length];
+          hint.textContent = 'Click the very important video link below to lock this digit.';
+          const videoLinkEl = document.createElement('a');
+          videoLinkEl.href = videoConfig.url;
+          videoLinkEl.target = '_blank';
+          videoLinkEl.rel = 'noopener noreferrer';
+          videoLinkEl.textContent = videoConfig.label;
+          videoLinkEl.className = 'video-lock-link';
 
-          card.addEventListener('pointerdown', (e) => {
-            if (locked[index]) return;
-            if (e.target.closest('.op-btn')) return;
-            startX = e.clientX;
-          });
-
-          card.addEventListener('pointerup', (e) => {
-            if (locked[index]) return;
-            if (startX == null) return;
-            if (e.target.closest('.op-btn')) return;
-            const deltaX = e.clientX - startX;
-            if (Math.abs(deltaX) > 60) {
+          videoLinkEl.addEventListener('click', () => {
+            // Give them a tiny moment to realize what happened
+            setTimeout(() => {
               lockThisDigit();
-            }
-            startX = null;
-          });
-
-          card.addEventListener('pointercancel', () => {
-            startX = null;
+            }, 500);
           });
 
           card.appendChild(current);
           card.appendChild(ops);
+          card.appendChild(videoLinkEl);
         } else if (mode === 2) {
           // Mode 2: Double-click / double-tap on card
           hint.textContent = 'Double-click / double-tap this card to lock.';
-
           card.addEventListener('dblclick', (e) => {
             if (locked[index]) return;
             if (e.target.closest('.op-btn')) return;
