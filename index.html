@@ -119,6 +119,7 @@
       gap: 6px;
       position: relative;
       overflow: hidden;
+      transition: box-shadow 0.15s, transform 0.1s, background 0.15s;
     }
 
     .digit-card::before {
@@ -152,12 +153,13 @@
       cursor: pointer;
       background: #e5e7eb;
       color: #111827;
-      transition: background 0.1s, transform 0.05s, box-shadow 0.1s;
+      transition: background 0.1s, transform 0.05s, box-shadow 0.1s, filter 0.1s;
       box-shadow: 0 1px 0 rgba(15, 23, 42, 0.12);
     }
 
     .op-btn:hover {
-      background: #d1d5db;
+      transform: translateY(-1px);
+      filter: brightness(1.05);
     }
 
     .op-btn:active {
@@ -165,11 +167,84 @@
       box-shadow: none;
     }
 
+    /* Neon operator variants */
+    .op-btn.add {
+      background: #22c55e;
+      color: #052e16;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+    }
+
+    .op-btn.sub {
+      background: #f97373;
+      color: #450a0a;
+      box-shadow: 0 0 8px rgba(248, 113, 113, 0.7);
+    }
+
+    .op-btn.mul {
+      background: #c4b5fd;
+      color: #312e81;
+      box-shadow: 0 0 8px rgba(129, 140, 248, 0.7);
+    }
+
+    .op-btn.div {
+      background: #67e8f9;
+      color: #083344;
+      box-shadow: 0 0 8px rgba(45, 212, 191, 0.7);
+    }
+
     .digit-hint {
       font-size: 0.7rem;
-      color: #9ca3af;
+      color: #6b7280;
       text-align: center;
       margin-top: 2px;
+    }
+
+    .digit-lock-status {
+      font-size: 0.7rem;
+      text-align: center;
+      color: #f97316;
+    }
+
+    .digit-card.locked {
+      background: #ecfdf5;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4) inset;
+      transform: translateY(-1px);
+    }
+
+    .digit-card.locked .digit-current {
+      color: #16a34a;
+    }
+
+    .digit-card.locked .digit-lock-status {
+      color: #16a34a;
+      font-weight: 600;
+    }
+
+    .digit-card.locked .op-btn {
+      opacity: 0.4;
+      pointer-events: none;
+      box-shadow: none;
+    }
+
+    .lock-button {
+      margin-top: 4px;
+      border-radius: 999px;
+      border: none;
+      padding: 4px 0;
+      font-size: 0.75rem;
+      cursor: pointer;
+      background: #fbbf24;
+      color: #451a03;
+      box-shadow: 0 0 6px rgba(251, 191, 36, 0.7);
+      transition: transform 0.05s, box-shadow 0.1s, filter 0.1s;
+    }
+
+    .lock-button:hover {
+      filter: brightness(1.05);
+    }
+    .lock-button:active {
+      transform: translateY(1px);
+      box-shadow: none;
     }
 
     .form-row {
@@ -252,6 +327,18 @@
       color: #dc2626;
     }
 
+    .shake {
+      animation: shake 0.3s;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-6px); }
+      100% { transform: translateX(0); }
+    }
+
     @media (max-width: 640px) {
       .app {
         border-radius: 0;
@@ -274,8 +361,9 @@
       <div>
         <div class="title">“Fun” Phone Number Input</div>
         <p class="subtitle">
-          Step 1: Use math to transform each digit.<br>
-          Step 2: Type your real number below and hope they match.
+          Step 1: Use neon math abilities on each digit.<br>
+          Step 2: Lock in each digit with its own weird interaction.<br>
+          Step 3: Type your real number below and hope it matches.
         </p>
       </div>
       <div class="tag">Unnecessarily Difficult</div>
@@ -304,7 +392,8 @@
           placeholder="(555) 123-4567"
         />
         <div class="helper">
-          We’ll only accept it if your math-transformed digits match this exactly.
+          We’ll only accept it if your math-transformed digits match this exactly.<br>
+          Also, every digit must be locked using its own bizarre ritual.
         </div>
       </div>
 
@@ -322,6 +411,7 @@
     (function() {
       const DIGIT_COUNT = 10;
       let digits = [];
+      let locked = [];
 
       const digitsGrid = document.getElementById('digitsGrid');
       const previewNumberEl = document.getElementById('previewNumber');
@@ -329,6 +419,7 @@
       const phoneForm = document.getElementById('phoneForm');
       const realPhoneInput = document.getElementById('realPhone');
       const statusMessage = document.getElementById('statusMessage');
+      const appEl = document.querySelector('.app');
 
       function randomDigit() {
         return Math.floor(Math.random() * 10);
@@ -336,6 +427,7 @@
 
       function initDigits() {
         digits = Array.from({ length: DIGIT_COUNT }, () => randomDigit());
+        locked = Array.from({ length: DIGIT_COUNT }, () => false);
       }
 
       function formatPhoneNumber(d) {
@@ -348,6 +440,10 @@
 
       function updatePreview() {
         previewNumberEl.textContent = formatPhoneNumber(digits);
+      }
+
+      function stripNonDigits(str) {
+        return (str || '').replace(/\D/g, '');
       }
 
       function createDigitCard(index) {
@@ -364,7 +460,7 @@
 
         const operations = [
           { symbol: '+1', fn: (v) => (v + 1) % 10 },
-          { symbol: '−1', fn: (v) => (v + 9) % 10 },
+          { symbol: '−1', fn: (v) => (v + 9) % 10 }, // mod 10
           { symbol: '×2', fn: (v) => (v * 2) % 10 },
           { symbol: '÷2', fn: (v) => Math.floor(v / 2) }
         ];
@@ -374,7 +470,20 @@
           btn.type = 'button';
           btn.className = 'op-btn';
           btn.textContent = op.symbol;
+
+          // Neon classes per operator
+          if (op.symbol.startsWith('+')) {
+            btn.classList.add('add');
+          } else if (op.symbol.startsWith('−')) {
+            btn.classList.add('sub');
+          } else if (op.symbol.startsWith('×')) {
+            btn.classList.add('mul');
+          } else {
+            btn.classList.add('div');
+          }
+
           btn.addEventListener('click', () => {
+            if (locked[index]) return;
             digits[index] = op.fn(digits[index]);
             current.textContent = digits[index];
             updatePreview();
@@ -384,11 +493,106 @@
 
         const hint = document.createElement('div');
         hint.className = 'digit-hint';
-        hint.textContent = 'Use math to reach your digit.';
 
-        card.appendChild(current);
-        card.appendChild(ops);
+        const lockStatus = document.createElement('div');
+        lockStatus.className = 'digit-lock-status';
+        lockStatus.textContent = 'Not locked';
+
+        function lockThisDigit() {
+          if (locked[index]) return;
+          locked[index] = true;
+          card.classList.add('locked');
+          lockStatus.textContent = 'Locked ✓';
+        }
+
+        // Different lock mechanics per digit
+        const mode = index % 4; // 0,1,2,3 cycling
+
+        if (mode === 0) {
+          // Mode 0: Lock button
+          hint.textContent = 'Lock this digit with the glowing button.';
+          const lockBtn = document.createElement('button');
+          lockBtn.type = 'button';
+          lockBtn.className = 'lock-button';
+          lockBtn.textContent = 'Lock this digit';
+          lockBtn.addEventListener('click', () => {
+            lockThisDigit();
+          });
+          card.appendChild(current);
+          card.appendChild(ops);
+          card.appendChild(lockBtn);
+        } else if (mode === 1) {
+          // Mode 1: Swipe left/right on card
+          hint.textContent = 'Swipe this card left or right to lock.';
+          let startX = null;
+
+          card.addEventListener('pointerdown', (e) => {
+            if (locked[index]) return;
+            if (e.target.closest('.op-btn')) return;
+            startX = e.clientX;
+          });
+
+          card.addEventListener('pointerup', (e) => {
+            if (locked[index]) return;
+            if (startX == null) return;
+            if (e.target.closest('.op-btn')) return;
+            const deltaX = e.clientX - startX;
+            if (Math.abs(deltaX) > 60) {
+              lockThisDigit();
+            }
+            startX = null;
+          });
+
+          card.addEventListener('pointercancel', () => {
+            startX = null;
+          });
+
+          card.appendChild(current);
+          card.appendChild(ops);
+        } else if (mode === 2) {
+          // Mode 2: Double-click / double-tap on card
+          hint.textContent = 'Double-click / double-tap this card to lock.';
+
+          card.addEventListener('dblclick', (e) => {
+            if (locked[index]) return;
+            if (e.target.closest('.op-btn')) return;
+            lockThisDigit();
+          });
+
+          card.appendChild(current);
+          card.appendChild(ops);
+        } else {
+          // Mode 3: Long press on card
+          hint.textContent = 'Long-press this card to lock.';
+          let pressTimer = null;
+
+          function startPress(e) {
+            if (locked[index]) return;
+            if (e.target.closest('.op-btn')) return;
+            pressTimer = setTimeout(() => {
+              lockThisDigit();
+            }, 600);
+          }
+
+          function cancelPress() {
+            if (pressTimer) {
+              clearTimeout(pressTimer);
+              pressTimer = null;
+            }
+          }
+
+          card.addEventListener('pointerdown', startPress);
+          card.addEventListener('pointerup', cancelPress);
+          card.addEventListener('pointerleave', cancelPress);
+          card.addEventListener('pointercancel', cancelPress);
+
+          card.appendChild(current);
+          card.appendChild(ops);
+        }
+
         card.appendChild(hint);
+        card.appendChild(lockStatus);
+
         return card;
       }
 
@@ -399,19 +603,26 @@
         }
       }
 
-      function stripNonDigits(str) {
-        return (str || '').replace(/\D/g, '');
-      }
-
       function handleSubmit(event) {
         event.preventDefault();
         statusMessage.textContent = '';
         statusMessage.className = 'status';
 
+        // Require all digits to be locked
+        if (locked.some(v => !v)) {
+          statusMessage.textContent = 'Every digit must be locked using its bizarre mechanism first.';
+          statusMessage.classList.add('status-error');
+          appEl.classList.add('shake');
+          setTimeout(() => appEl.classList.remove('shake'), 300);
+          return;
+        }
+
         const userDigits = stripNonDigits(realPhoneInput.value);
         if (userDigits.length !== DIGIT_COUNT) {
           statusMessage.textContent = 'Please enter a 10-digit phone number in the confirmation field.';
           statusMessage.classList.add('status-error');
+          appEl.classList.add('shake');
+          setTimeout(() => appEl.classList.remove('shake'), 300);
           return;
         }
 
@@ -419,9 +630,16 @@
         if (constructed === userDigits) {
           statusMessage.textContent = '✅ Nailed it. You have successfully suffered through this form.';
           statusMessage.classList.add('status-ok');
+          const originalBg = document.body.style.background;
+          document.body.style.background = 'radial-gradient(circle at top, #bbf7d0, #22c55e)';
+          setTimeout(() => {
+            document.body.style.background = originalBg || 'radial-gradient(circle at top, #f5f7ff, #dcdde8)';
+          }, 800);
         } else {
           statusMessage.textContent = '❌ The math-transformed digits do not match what you typed. Try more chaos.';
           statusMessage.classList.add('status-error');
+          appEl.classList.add('shake');
+          setTimeout(() => appEl.classList.remove('shake'), 300);
         }
       }
 
