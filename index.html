@@ -162,4 +162,286 @@
 
     .op-btn:active {
       transform: translateY(1px);
-      box-s
+      box-shadow: none;
+    }
+
+    .digit-hint {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .form-row {
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #4b5563;
+      font-weight: 500;
+    }
+
+    input[type="tel"] {
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      padding: 8px 10px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      background: #f9fafb;
+    }
+
+    input[type="tel"]:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.35);
+      background: #ffffff;
+    }
+
+    .helper {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .submit-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .submit-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #4f46e5;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 8px 18px rgba(79, 70, 229, 0.45);
+      transition: background 0.15s, transform 0.05s, box-shadow 0.15s;
+      white-space: nowrap;
+    }
+
+    .submit-btn:hover {
+      background: #4338ca;
+    }
+
+    .submit-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 3px 10px rgba(79, 70, 229, 0.4);
+    }
+
+    .status {
+      font-size: 0.85rem;
+    }
+
+    .status-ok {
+      color: #16a34a;
+    }
+
+    .status-error {
+      color: #dc2626;
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        border-radius: 0;
+        height: 100vh;
+        max-width: 100%;
+      }
+      .digits-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+      .preview-number {
+        font-size: 1rem;
+        letter-spacing: 0.12em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="app-header">
+      <div>
+        <div class="title">“Fun” Phone Number Input</div>
+        <p class="subtitle">
+          Step 1: Use math to transform each digit.<br>
+          Step 2: Type your real number below and hope they match.
+        </p>
+      </div>
+      <div class="tag">Unnecessarily Difficult</div>
+    </div>
+
+    <div class="preview">
+      <div>
+        <div class="preview-label">Constructed phone number</div>
+        <div id="previewNumber" class="preview-number">(???)-???-????</div>
+      </div>
+      <button type="button" class="reset-button" id="resetDigitsBtn">Chaos again</button>
+    </div>
+
+    <div class="digits-grid" id="digitsGrid">
+      <!-- Digit cards inserted via JS -->
+    </div>
+
+    <form id="phoneForm" novalidate>
+      <div class="form-row">
+        <label for="realPhone">Confirm your phone number (normal input)</label>
+        <input
+          id="realPhone"
+          type="tel"
+          inputmode="numeric"
+          autocomplete="tel"
+          placeholder="(555) 123-4567"
+        />
+        <div class="helper">
+          We’ll only accept it if your math-transformed digits match this exactly.
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button type="submit" class="submit-btn">
+          Submit the Hard Way
+          <span>📱➕➖✖️➗</span>
+        </button>
+        <div id="statusMessage" class="status"></div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    (function() {
+      const DIGIT_COUNT = 10;
+      let digits = [];
+
+      const digitsGrid = document.getElementById('digitsGrid');
+      const previewNumberEl = document.getElementById('previewNumber');
+      const resetDigitsBtn = document.getElementById('resetDigitsBtn');
+      const phoneForm = document.getElementById('phoneForm');
+      const realPhoneInput = document.getElementById('realPhone');
+      const statusMessage = document.getElementById('statusMessage');
+
+      function randomDigit() {
+        return Math.floor(Math.random() * 10);
+      }
+
+      function initDigits() {
+        digits = Array.from({ length: DIGIT_COUNT }, () => randomDigit());
+      }
+
+      function formatPhoneNumber(d) {
+        if (d.length !== DIGIT_COUNT) return '(???)-???-????';
+        const part1 = `${d[0]}${d[1]}${d[2]}`;
+        const part2 = `${d[3]}${d[4]}${d[5]}`;
+        const part3 = `${d[6]}${d[7]}${d[8]}${d[9]}`;
+        return `(${part1}) ${part2}-${part3}`;
+      }
+
+      function updatePreview() {
+        previewNumberEl.textContent = formatPhoneNumber(digits);
+      }
+
+      function createDigitCard(index) {
+        const card = document.createElement('div');
+        card.className = 'digit-card';
+        card.dataset.indexLabel = `pos ${index + 1}`;
+
+        const current = document.createElement('div');
+        current.className = 'digit-current';
+        current.textContent = digits[index];
+
+        const ops = document.createElement('div');
+        ops.className = 'digit-ops';
+
+        const operations = [
+          { symbol: '+1', fn: (v) => (v + 1) % 10 },
+          { symbol: '−1', fn: (v) => (v + 9) % 10 },
+          { symbol: '×2', fn: (v) => (v * 2) % 10 },
+          { symbol: '÷2', fn: (v) => Math.floor(v / 2) }
+        ];
+
+        operations.forEach((op) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'op-btn';
+          btn.textContent = op.symbol;
+          btn.addEventListener('click', () => {
+            digits[index] = op.fn(digits[index]);
+            current.textContent = digits[index];
+            updatePreview();
+          });
+          ops.appendChild(btn);
+        });
+
+        const hint = document.createElement('div');
+        hint.className = 'digit-hint';
+        hint.textContent = 'Use math to reach your digit.';
+
+        card.appendChild(current);
+        card.appendChild(ops);
+        card.appendChild(hint);
+        return card;
+      }
+
+      function renderDigits() {
+        digitsGrid.innerHTML = '';
+        for (let i = 0; i < DIGIT_COUNT; i++) {
+          digitsGrid.appendChild(createDigitCard(i));
+        }
+      }
+
+      function stripNonDigits(str) {
+        return (str || '').replace(/\D/g, '');
+      }
+
+      function handleSubmit(event) {
+        event.preventDefault();
+        statusMessage.textContent = '';
+        statusMessage.className = 'status';
+
+        const userDigits = stripNonDigits(realPhoneInput.value);
+        if (userDigits.length !== DIGIT_COUNT) {
+          statusMessage.textContent = 'Please enter a 10-digit phone number in the confirmation field.';
+          statusMessage.classList.add('status-error');
+          return;
+        }
+
+        const constructed = digits.join('');
+        if (constructed === userDigits) {
+          statusMessage.textContent = '✅ Nailed it. You have successfully suffered through this form.';
+          statusMessage.classList.add('status-ok');
+        } else {
+          statusMessage.textContent = '❌ The math-transformed digits do not match what you typed. Try more chaos.';
+          statusMessage.classList.add('status-error');
+        }
+      }
+
+      function resetDigits() {
+        initDigits();
+        renderDigits();
+        updatePreview();
+        statusMessage.textContent = '';
+        statusMessage.className = 'status';
+      }
+
+      // Init
+      initDigits();
+      renderDigits();
+      updatePreview();
+
+      // Events
+      phoneForm.addEventListener('submit', handleSubmit);
+      resetDigitsBtn.addEventListener('click', resetDigits);
+    })();
+  </script>
+</body>
+</html>
