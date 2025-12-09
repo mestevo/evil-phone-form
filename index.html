@@ -444,6 +444,32 @@
       color: #e5e7eb;
     }
 
+    .result-meta {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-bottom: 8px;
+      margin-top: 6px;
+    }
+
+    .result-meta-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .result-meta-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+    }
+
+    .result-meta-value {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: #e5e7eb;
+    }
+
+
     .try-again-btn {
       border-radius: 999px;
       border: 1px solid #4b5563;
@@ -543,20 +569,43 @@
     <div id="resultScreen" class="result-screen">
       <div class="result-header">
         <div class="result-icon">🚫</div>
-        <div class="result-title">Call Cannot Be Completed as Dialed</div>
+        <div>
+          <div class="result-title">Call Cannot Be Completed as Dialed</div>
+          <div style="font-size:0.75rem;color:#9ca3af;margin-top:2px;">
+            Network Announcement: 4&nbsp;8&nbsp;2
+          </div>
+        </div>
       </div>
+
       <p class="result-text">
-        The number you entered cannot be dialed as entered. Please verify the number and try again.
-        If you believe you have reached this message in error, you are probably using this form correctly.
+        We’re sorry, the number you have entered cannot be completed as dialed. Please check the number and try again.
+        If you believe you have reached this message in error, please contact your service provider.
       </p>
+
       <div class="result-number-label">Entered number</div>
       <div id="resultNumber" class="result-number"></div>
+
+      <div class="result-meta">
+        <div class="result-meta-line">
+          <span class="result-meta-label">Error code</span>
+          <span class="result-meta-value">MST-482</span>
+        </div>
+        <div class="result-meta-line">
+          <span class="result-meta-label">Originating switch</span>
+          <span class="result-meta-value">MESTEVO-CO-09</span>
+        </div>
+        <div class="result-meta-line">
+          <span class="result-meta-label">Call trace id</span>
+          <span class="result-meta-value">TRC-{{ 0007-A1 }}</span>
+        </div>
+      </div>
+
       <button type="button" id="tryAgainBtn" class="try-again-btn">
         Try Again
         <span>↻</span>
       </button>
     </div>
-  </div>
+
 
   <script>
     (function() {
@@ -833,3 +882,4 @@
   </script>
 </body>
 </html>
+
