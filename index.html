@@ -61,6 +61,16 @@
       white-space: nowrap;
     }
 
+    /* Interaction area + fade */
+    #interactionArea {
+      transition: opacity 0.3s ease;
+    }
+
+    #interactionArea.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     .preview {
       margin-bottom: 18px;
       padding: 12px 14px;
@@ -355,6 +365,85 @@
       100% { transform: translateX(0); }
     }
 
+    /* Result screen (official error) */
+    .result-screen {
+      display: none;
+      margin-top: 8px;
+      padding: 18px 16px 20px;
+      border-radius: 14px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .result-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 1.2rem;
+    }
+
+    .result-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .result-text {
+      font-size: 0.85rem;
+      color: #4b5563;
+      margin: 4px 0 10px;
+    }
+
+    .result-number-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+    }
+
+    .result-number {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-top: 2px;
+      margin-bottom: 10px;
+    }
+
+    .try-again-btn {
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, transform 0.05s, box-shadow 0.15s;
+    }
+
+    .try-again-btn:hover {
+      background: #f3f4f6;
+      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.08);
+    }
+
+    .try-again-btn:active {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
     @media (max-width: 640px) {
       .app {
         border-radius: 0;
@@ -379,48 +468,69 @@
         <p class="subtitle">
           Step 1: Use neon math abilities on each digit.<br>
           Step 2: Lock each digit with its own weird ritual (buttons, videos, double-clicks, long-presses).<br>
-          Step 3: Type your real number below and hope it matches.
+          Step 3: Type your real number below. The network will handle it from there. Probably.
         </p>
       </div>
       <div class="tag">Unnecessarily Difficult</div>
     </div>
 
-    <div class="preview">
-      <div>
-        <div class="preview-label">Constructed phone number</div>
-        <div id="previewNumber" class="preview-number">(???)-???-????</div>
-      </div>
-      <button type="button" class="reset-button" id="resetDigitsBtn">Chaos again</button>
-    </div>
-
-    <div class="digits-grid" id="digitsGrid">
-      <!-- Digit cards inserted via JS -->
-    </div>
-
-    <form id="phoneForm" novalidate>
-      <div class="form-row">
-        <label for="realPhone">Confirm your phone number (normal input)</label>
-        <input
-          id="realPhone"
-          type="tel"
-          inputmode="numeric"
-          autocomplete="tel"
-          placeholder="(555) 123-4567"
-        />
-        <div class="helper">
-          We’ll only accept it if your math-transformed digits match this exactly.<br>
-          Also, every digit must be locked using its own bizarre mechanism first.
+    <!-- Main interaction area that will fade out -->
+    <div id="interactionArea">
+      <div class="preview">
+        <div>
+          <div class="preview-label">Constructed phone number</div>
+          <div id="previewNumber" class="preview-number">(???)-???-????</div>
         </div>
+        <button type="button" class="reset-button" id="resetDigitsBtn">Chaos again</button>
       </div>
 
-      <div class="submit-row">
-        <button type="submit" class="submit-btn">
-          Submit the Hard Way
-          <span>📱➕➖✖️➗</span>
-        </button>
-        <div id="statusMessage" class="status"></div>
+      <div class="digits-grid" id="digitsGrid">
+        <!-- Digit cards inserted via JS -->
       </div>
-    </form>
+
+      <form id="phoneForm" novalidate>
+        <div class="form-row">
+          <label for="realPhone">Confirm your phone number (normal input)</label>
+          <input
+            id="realPhone"
+            type="tel"
+            inputmode="numeric"
+            autocomplete="tel"
+            placeholder="(555) 123-4567"
+          />
+          <div class="helper">
+            We’ll only accept it if your math-transformed digits match this exactly.<br>
+            Also, every digit must be locked using its own bizarre mechanism first.
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <button type="submit" class="submit-btn">
+            Submit the Hard Way
+            <span>📱➕➖✖️➗</span>
+          </button>
+          <div id="statusMessage" class="status"></div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Official-looking error screen -->
+    <div id="resultScreen" class="result-screen">
+      <div class="result-header">
+        <div class="result-icon">🚫</div>
+        <div class="result-title">Call Cannot Be Completed as Dialed</div>
+      </div>
+      <p class="result-text">
+        The number you entered cannot be dialed as entered. Please verify the number and try again.
+        If you believe you have reached this message in error, you are probably using this form correctly.
+      </p>
+      <div class="result-number-label">Entered number</div>
+      <div id="resultNumber" class="result-number"></div>
+      <button type="button" id="tryAgainBtn" class="try-again-btn">
+        Try Again
+        <span>↻</span>
+      </button>
+    </div>
   </div>
 
   <script>
@@ -437,6 +547,11 @@
       const statusMessage = document.getElementById('statusMessage');
       const appEl = document.querySelector('.app');
 
+      const interactionArea = document.getElementById('interactionArea');
+      const resultScreen = document.getElementById('resultScreen');
+      const resultNumberEl = document.getElementById('resultNumber');
+      const tryAgainBtn = document.getElementById('tryAgainBtn');
+
       // Edit these to change what videos you troll people with
       const videoLinks = [
         {
@@ -445,11 +560,11 @@
         },
         {
           label: 'Watch a classic phone commercial',
-          url: 'https://www.youtube.com/results?search_query=90s+phone+commercial'
+          url: 'https://youtu.be/694TX2lQ7Uo'
         },
         {
           label: 'Learn about responsible phone number usage',
-          url: 'https://www.youtube.com/results?search_query=funny+phone+ad'
+          url: 'https://youtu.be/V04bh-G4-qU'
         }
       ];
 
@@ -462,7 +577,7 @@
         locked = Array.from({ length: DIGIT_COUNT }, () => false);
       }
 
-      function formatPhoneNumber(d) {
+      function formatPhoneNumberFromArray(d) {
         if (d.length !== DIGIT_COUNT) return '(???)-???-????';
         const part1 = `${d[0]}${d[1]}${d[2]}`;
         const part2 = `${d[3]}${d[4]}${d[5]}`;
@@ -471,7 +586,7 @@
       }
 
       function updatePreview() {
-        previewNumberEl.textContent = formatPhoneNumber(digits);
+        previewNumberEl.textContent = formatPhoneNumberFromArray(digits);
       }
 
       function stripNonDigits(str) {
@@ -650,21 +765,19 @@
           return;
         }
 
-        const constructed = digits.join('');
-        if (constructed === userDigits) {
-          statusMessage.textContent = '✅ Nailed it. You have successfully suffered through this form.';
-          statusMessage.classList.add('status-ok');
-          const originalBg = document.body.style.background;
-          document.body.style.background = 'radial-gradient(circle at top, #bbf7d0, #22c55e)';
-          setTimeout(() => {
-            document.body.style.background = originalBg || 'radial-gradient(circle at top, #f5f7ff, #dcdde8)';
-          }, 800);
-        } else {
-          statusMessage.textContent = '❌ The math-transformed digits do not match what you typed. Try more chaos.';
-          statusMessage.classList.add('status-error');
-          appEl.classList.add('shake');
-          setTimeout(() => appEl.classList.remove('shake'), 300);
-        }
+        // At this point: all digits locked + 10-digit number entered.
+        // Fade away interaction area and show the "cannot be completed" screen.
+        const digitsArr = userDigits.split('').map(d => parseInt(d, 10));
+        resultNumberEl.textContent = formatPhoneNumberFromArray(digitsArr);
+
+        statusMessage.textContent = '';
+        statusMessage.className = 'status';
+
+        interactionArea.classList.add('fade-out');
+        setTimeout(() => {
+          interactionArea.style.display = 'none';
+          resultScreen.style.display = 'block';
+        }, 300);
       }
 
       function resetDigits() {
@@ -675,6 +788,15 @@
         statusMessage.className = 'status';
       }
 
+      function handleTryAgain() {
+        // Restore interaction area
+        resultScreen.style.display = 'none';
+        interactionArea.style.display = 'block';
+        interactionArea.classList.remove('fade-out');
+        realPhoneInput.value = '';
+        resetDigits();
+      }
+
       // Init
       initDigits();
       renderDigits();
@@ -683,6 +805,7 @@
       // Events
       phoneForm.addEventListener('submit', handleSubmit);
       resetDigitsBtn.addEventListener('click', resetDigits);
+      tryAgainBtn.addEventListener('click', handleTryAgain);
     })();
   </script>
 </body>
